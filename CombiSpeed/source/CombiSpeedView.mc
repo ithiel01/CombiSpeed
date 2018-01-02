@@ -502,8 +502,7 @@ class CombiSpeedView extends Ui.DataField {
     
             } else {                    //  12
               dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_RED);
-              bft = 12;
-              
+              bft = 12;             
             }
           } else {
             dc.setColor(Graphics.COLOR_DK_GREEN, Graphics.COLOR_TRANSPARENT);
@@ -632,7 +631,7 @@ class CombiSpeedView extends Ui.DataField {
       var y1 = height - 22;
       
       if (mBlink) {
-         // If speed above 10km/h and not recording start blinking1
+         // If speed above 10km/h and not recording start blinking
          if ((mSpeed != null) && (mState != null)) {
            if (mSpeed>1000*10) {
              if (mState==Activity.TIMER_STATE_OFF) {
@@ -675,6 +674,7 @@ class CombiSpeedView extends Ui.DataField {
             var windunit = data["query"]["results"]["channel"]["units"]["speed"];          
             windspeed = data["query"]["results"]["channel"]["wind"]["speed"].toNumber(); 
             if (windunit.equals("km/h")) {
+              // convert to mp/h
               windspeed = windspeed / 1.609344;
             }       
             //System.println("windspeed "+windspeed);
