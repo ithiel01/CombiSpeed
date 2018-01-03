@@ -22,7 +22,7 @@ class BgbgServiceDelegate extends Toybox.System.ServiceDelegate {
     function getWeather() {
       System.println("-> BgbgServiceDelegate Querying API...");
       var lastPos = App.getApp().getProperty("lastpos");
-      lastPos = "Utrecht";
+      // lastPos = "Utrecht";
         
       if ((lastPos!=null) && !(lastPos.equals(""))) {           
         System.println("-> BgbgServiceDelegate "+lastPos);  
