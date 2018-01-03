@@ -30,7 +30,7 @@ class CombiSpeedView extends Ui.DataField {
     
     function initialize() {
       DataField.initialize();  
-      App.getApp().setProperty("lastpos", "");  
+      App.getApp().setProperty("lastpos" , "");  
       App.getApp().setProperty("lastdata", "");  
     }
     
@@ -40,8 +40,7 @@ class CombiSpeedView extends Ui.DataField {
     }
     
     function onLayout(dc) {
-       mFull = (dc.getWidth()>250);
-       
+       mFull = (dc.getWidth()>250);   
        populateConfigFromDeviceSettings();
        
        View.setLayout(Rez.Layouts.MainLayout(dc));
@@ -57,20 +56,22 @@ class CombiSpeedView extends Ui.DataField {
     function compute(info) {
        var lastPos = "";
        
+       // get position
        if ((info.currentLocation != null) && (info.currentLocationAccuracy!=null)) {
          if (info.currentLocationAccuracy>=2) {
-           lastPos = info.currentLocation.toDegrees()[0].toString() + "," +
-                         info.currentLocation.toDegrees()[1].toString();
+           lastPos = info.currentLocation.toDegrees()[0].toString() + "," + info.currentLocation.toDegrees()[1].toString();
            App.getApp().setProperty("lastpos", lastPos);
          } else {
            App.getApp().setProperty("lastpos", "");
          }
        }
-                      
+           
+       // get track (=compass)           
        if (info.track  != null)  {
           mTrack = info.track * _180_PI;
        } 
-           
+          
+       // get GPS accuracy 
        if (info.currentLocationAccuracy  != null)  {
           mGpsSignal = info.currentLocationAccuracy;
           if (mGpsSignal<2) {
@@ -78,17 +79,20 @@ class CombiSpeedView extends Ui.DataField {
             App.getApp().setProperty("lastdata", "");
           }
        }   
-                 
+          
+       // Elapsed time       
        mElapsed = 0;
        if (info.elapsedTime != null) {
          mElapsed = info.elapsedTime;
        }  
          
+       // Timer time, doesn't go up when pauzed
        mTimerTime = 0;
        if (info.elapsedTime !=  null) {
          mTimerTime = info.timerTime;
        }
        
+       // speed
        mValue = "0.0";
        mSpeed = 0;
        if (info has :currentSpeed) {
@@ -99,12 +103,14 @@ class CombiSpeedView extends Ui.DataField {
           } 
        }
        
+       // time state
        if (info has :timerState) {
          if (info.timerState != null) {
            mState = info.timerState; 
          }
        }
        
+       // average speed
        if (info has :averageSpeed) {
          if (info.averageSpeed != null) {
             mAvgValue = info.averageSpeed * 60 * 60 /  (isSpdMetric ? 1000 : 1610);
@@ -175,8 +181,10 @@ class CombiSpeedView extends Ui.DataField {
         }
         
         if ((myStats.battery<=15)  && (mBlink)) {
+           // show baterry when 15% or less
            dc.drawText(x, y, mSF, myStats.battery.format("%i")+"%", Gfx.TEXT_JUSTIFY_LEFT);                     
         } else if ((mGpsSignal!=null) && (mGpsSignal<3)) {
+          // draw gps when reception is poor or less
           if (mGpsSignal < 1) {
             drawGpsBars(dc, x, y, Graphics.COLOR_LT_GRAY, Graphics.COLOR_LT_GRAY, Graphics.COLOR_LT_GRAY, Graphics.COLOR_LT_GRAY);
           } else if (mGpsSignal == 1) {
@@ -192,6 +200,7 @@ class CombiSpeedView extends Ui.DataField {
     }
     
     function drawTime(dc) {
+    // draw system time
       var width  = dc.getWidth();
       var height = dc.getHeight();
       var y = 2;
@@ -216,12 +225,13 @@ class CombiSpeedView extends Ui.DataField {
     }    
               
     function drawArrow (dc, track, wind, windspeed) {
-    // Draw Direction Arrow
+    // Draw compass and wind direction
        
         var width  = dc.getWidth();
         var height = dc.getHeight();
         var showBft = mFull; // show windspeed in bft
        
+        // yes, have to figure out mokey-c arrays
         var x1_1;
         var y1_1;
         var x2_1;
@@ -248,20 +258,12 @@ class CombiSpeedView extends Ui.DataField {
         var x6_2;
         var y6_2;  
 
-        /*
-        var minx = 9999;
-        var maxx = 0;
-        var miny = 9999;
-        var maxy = 0;
-        */
         var xoffset = 0;
         var yoffset = 0;
         
         var angle;
         var sim = false;
         
-//        var l = 0.65;
-//        var l2 = 0.3;
         var l = 1;
         var l2 = 0.5;
         var a = 180-30;
@@ -275,13 +277,7 @@ class CombiSpeedView extends Ui.DataField {
         r = r/3.2;
         if (r>50) {
           r = 50;
-        }
-                
-        //if (wind==null) {
-        //  r = r/2.4;
-        //} else {
-        //  r = r/2.8;
-        //}    
+        } 
         
         // angle of the compass, point to north     
         if (track!=null) {
@@ -303,35 +299,7 @@ class CombiSpeedView extends Ui.DataField {
         y5_1 = r * Math.sin((angle-a)*_PI_180) * l; 
         x6_1 = r * Math.cos((angle+180)*_PI_180) * l2;
         y6_1 = r * Math.sin((angle+180)*_PI_180) * l2;
-        
-        /*
-        if (x1_1<minx) { minx = x1_1; }
-        if (x1_1>maxx) { maxx = x1_1; }
-        if (x2_1<minx) { minx = x2_1; }
-        if (x2_1>maxx) { maxx = x2_1; }
-        if (x3_1<minx) { minx = x3_1; }
-        if (x3_1>maxx) { maxx = x3_1; }
-        if (x4_1<minx) { minx = x4_1; }
-        if (x4_1>maxx) { maxx = x4_1; }
-        if (x5_1<minx) { minx = x5_1; }
-        if (x5_1>maxx) { maxx = x5_1; }
-        if (x6_1<minx) { minx = x6_1; }
-        if (x6_1>maxx) { maxx = x6_1; }
-        
-        if (y1_1<miny) { miny = y1_1; }        
-        if (y1_1>maxy) { maxy = y1_1; }
-        if (y2_1<miny) { miny = y2_1; }
-        if (y2_1>maxy) { maxy = y2_1; }
-        if (y3_1<miny) { miny = y3_1; }
-        if (y3_1>maxy) { maxy = y3_1; }
-        if (y4_1<miny) { miny = y4_1; }
-        if (y4_1>maxy) { maxy = y4_1; }
-        if (y5_1<miny) { miny = y5_1; }
-        if (y5_1>maxy) { maxy = y5_1; }
-        if (y6_1<miny) { miny = y6_1; }
-        if (y6_1>maxx) { maxy = y6_1; }
-		*/
-		
+        		
         if (wind!=null) {
           // angle of the wind,points to the wind direction
           angle = wind+90+180;      
@@ -353,35 +321,7 @@ class CombiSpeedView extends Ui.DataField {
           x5_2 = r * Math.cos((angle-a)*_PI_180) * l;
           y5_2 = r * Math.sin((angle-a)*_PI_180) * l; 
           x6_2 = r * Math.cos((angle+180)*_PI_180) * l2;
-          y6_2 = r * Math.sin((angle+180)*_PI_180) * l2;
-        
-          /*
-          if (x1_2<minx) { minx = x1_2; }
-          if (x1_2>maxx) { maxx = x1_2; }
-          if (x2_2<minx) { minx = x2_2; }
-          if (x2_2>maxx) { maxx = x2_2; }
-          if (x3_2<minx) { minx = x3_2; }
-          if (x3_2>maxx) { maxx = x3_2; }
-          if (x4_2<minx) { minx = x4_2; }
-          if (x4_2>maxx) { maxx = x4_2; }
-          if (x5_2<minx) { minx = x5_2; }
-          if (x5_2>maxx) { maxx = x5_2; }
-          if (x6_2<minx) { minx = x6_2; }
-          if (x6_2>maxx) { maxx = x6_2; }
-        
-          if (y1_2<miny) { miny = y1_2; }        
-          if (y1_2>maxy) { maxy = y1_2; }
-          if (y2_2<miny) { miny = y2_2; }
-          if (y2_2>maxy) { maxy = y2_2; }
-          if (y3_2<miny) { miny = y3_2; }
-          if (y3_2>maxy) { maxy = y3_2; }
-          if (y4_2<miny) { miny = y4_2; }
-          if (y4_2>maxy) { maxy = y4_2; }
-          if (y5_2<miny) { miny = y5_2; }
-          if (y5_2>maxy) { maxy = y5_2; }
-          if (y6_2<miny) { miny = y6_2; }
-          if (y6_2>maxx) { maxy = y6_2; }		
-          */
+          y6_2 = r * Math.sin((angle+180)*_PI_180) * l2;         
         } else {
           x1_2 = 0;
           y1_2 = 0; 
@@ -396,17 +336,7 @@ class CombiSpeedView extends Ui.DataField {
           x6_2 = 0;
           y6_2 = 0;
         }     
-        
-        /*
-        xoffset = -minx + (width - (maxx-minx)) - 6;
-        yoffset = -miny + 4;
-        
-        if ((wind!=null) && (showBft)) {
-          xoffset = -minx + (width - (maxx-minx)) - 18;
-          yoffset = -miny + 4;
-        }
-        */
-        
+       
         if ((wind!=null) && (showBft)) {
           xoffset = width - r - 16;
         }
@@ -600,7 +530,7 @@ class CombiSpeedView extends Ui.DataField {
     }
     
     function calculateElapsedTime(ms) {
-    // Formar ms into human readable format
+    // Format ms into human readable format
        ms = ms / 1000;
             
        var hours   = 0.0;
@@ -622,6 +552,7 @@ class CombiSpeedView extends Ui.DataField {
     }
        
     function drawElapsed(dc) {
+    // Draw elapsed time or paused time
       var width = dc.getWidth();
       var height = dc.getHeight();
       var x1 = width  - 28;
@@ -660,6 +591,7 @@ class CombiSpeedView extends Ui.DataField {
     }
        
     function drawState(dc) {
+    // draw timer state
       var width = dc.getWidth();
       var height = dc.getHeight();
       
@@ -703,30 +635,23 @@ class CombiSpeedView extends Ui.DataField {
        var winddirection = null;
        var windspeed = null;
         
-       var data = App.getApp().getProperty("lastdata");
-       
+       ////////////////////////////////////////////////////////////////////
+       // Get wind direction from the backgroup program 
+       var data = App.getApp().getProperty("lastdata");       
        mLabel = Rez.Strings.speed;
        if ((data!=null) && (!data.equals(""))) {      
             var windunit = data["query"]["results"]["channel"]["units"]["speed"];          
             windspeed = data["query"]["results"]["channel"]["wind"]["speed"].toNumber(); 
+            // convert to mph
             if (windunit.equals("km/h")) {
-              // convert to mp/h
               windspeed = windspeed / 1.609344;
             }       
-            //System.println("windspeed "+windspeed);
-          
             winddirection = data["query"]["results"]["channel"]["wind"]["direction"].toNumber();          
-            //System.println("winddirection "+winddirection);
-          
-            //System.println("windunit "+windunit);
-          
             var cityname = data["query"]["results"]["channel"]["location"]["city"];
             if ((cityname!=null) && (!cityname.equals(""))){
               mLabel = cityname;
             }
-            //System.println("cityname "+cityname);
        }
- 
                
       View.findDrawableById("Background").setColor(getBackgroundColor());
       dc.setColor(getBackgroundColor(), getBackgroundColor());
@@ -745,8 +670,7 @@ class CombiSpeedView extends Ui.DataField {
       drawAvg(dc);
       drawArrow (dc, mTrack, winddirection, windspeed);  
       drawState(dc);
-      drawElapsed(dc);
-      
+      drawElapsed(dc);     
    }
 
 }
